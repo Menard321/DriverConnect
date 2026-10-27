@@ -1,10 +1,9 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mic, ArrowRight, ShieldCheck, Car, ShoppingBag, Wrench } from "lucide-react";
+import { Mic, ArrowRight, ShieldCheck, Car, ShoppingBag, Wrench, Sparkles } from "lucide-react";
 import FloatingCardsTicker from "./FloatingCardsTicker";
 
 export interface FlowMotionHeroProps {
@@ -28,7 +27,7 @@ export function FlowMotionHero({
   };
 
   return (
-    <section className="relative w-full bg-slate-950 overflow-hidden pt-8 pb-10 sm:pb-14 flex flex-col items-center border-b border-slate-800">
+    <section className="relative w-full bg-slate-950 overflow-hidden pt-8 pb-8 sm:pb-12 flex flex-col items-center border-b border-slate-800">
       
       {/* 1. Ambient Background Lighting & Image Overlay */}
       <div
@@ -99,7 +98,7 @@ export function FlowMotionHero({
           <button
             type="button"
             onClick={handleTriggerVoice}
-            className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold text-xs uppercase tracking-wider transition flex items-center gap-2 cursor-pointer"
+            className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 text-white font-bold text-xs uppercase tracking-wider transition flex items-center gap-2 cursor-pointer"
           >
             <Mic className="w-4 h-4 text-amber-400 animate-pulse" />
             <span>Speak with Ava</span>
@@ -107,42 +106,47 @@ export function FlowMotionHero({
         </div>
       </div>
 
-      {/* 3. Showcase Vehicle Canvas (Centered High-Res Luxury Vehicle) */}
-      <div className="relative z-20 mt-8 w-full max-w-4xl px-4 flex justify-center">
-        <div className="relative w-full max-w-2xl h-56 sm:h-72 md:h-80 rounded-3xl overflow-hidden bg-slate-900/60 border border-slate-800 shadow-2xl flex items-center justify-center group">
-          <Image
-            src="/images/cars/toyota-prado.webp"
-            alt="Toyota Land Cruiser Prado TX-L"
-            fill
-            priority
-            unoptimized
-            className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-          />
-          {/* Subtle vignette shadow gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
-          
-          <div className="absolute bottom-3 left-4 bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 rounded-full text-[11px] font-black text-amber-400 border border-slate-800 shadow-lg">
-            Toyota Land Cruiser Prado TX &bull; TZS 350,000 / day
+      {/* 3. Flow-Motion Highway & Moving Vehicle Animation */}
+      <div className="relative w-full h-36 sm:h-44 mt-6 overflow-hidden flex items-end">
+        {/* Road Surface & Endless Animated Highway Markers */}
+        <div className="absolute bottom-0 w-full h-12 bg-gradient-to-t from-slate-950 via-slate-900 to-transparent border-t border-slate-800/80">
+          <div className="relative w-full h-full flex items-center overflow-hidden">
+            <motion.div
+              className="flex gap-16 whitespace-nowrap"
+              animate={{ x: ["0%", "-50%"] }}
+              transition={{ repeat: Infinity, duration: 2.2, ease: "linear" }}
+            >
+              {Array.from({ length: 24 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="w-12 h-1 bg-amber-400/40 rounded-full flex-shrink-0 shadow-[0_0_8px_rgba(251,191,36,0.3)]"
+                />
+              ))}
+            </motion.div>
           </div>
         </div>
-      </div>
 
-      {/* 4. The Road Surface with Animated Dashed Dividers */}
-      <div className="relative w-full h-12 bg-slate-900/90 border-y border-slate-800 mt-6 flex items-center overflow-hidden">
-        {/* Animated Dashed Road Stripe */}
+        {/* Dynamic Moving Car Fleet Loop Across the Road */}
         <motion.div
-          className="flex gap-8 w-max"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{ repeat: Infinity, ease: "linear", duration: 8 }}
+          className="absolute bottom-3 z-20 flex items-center pointer-events-none"
+          initial={{ x: "-120%" }}
+          animate={{ x: "125vw" }}
+          transition={{ repeat: Infinity, duration: 11, ease: "linear" }}
         >
-          {Array.from({ length: 40 }).map((_, i) => (
-            <div key={i} className="w-12 h-1 bg-amber-400/70 rounded-full flex-shrink-0" />
-          ))}
+          <div className="relative group">
+            <img
+              src="/images/flow-motion-car.webp"
+              alt="DriverConnect Moving Fleet"
+              className="w-64 sm:w-80 md:w-[380px] object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.9)]"
+            />
+            {/* Aerodynamic Speed Glow Streak */}
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-48 h-16 bg-gradient-to-r from-amber-300/20 via-amber-100/5 to-transparent blur-lg rounded-full pointer-events-none transform translate-x-28" />
+          </div>
         </motion.div>
       </div>
 
-      {/* 5. Animated Floating Metric Cards (Infinite Stream directly below the road) */}
-      <div className="w-full mt-2">
+      {/* 4. Animated Floating Metric Cards (Infinite Stream directly below the road) */}
+      <div className="w-full mt-3">
         <FloatingCardsTicker />
       </div>
 
