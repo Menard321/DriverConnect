@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 98%;
+    --foreground: 220 30% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 10%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 38 92% 44%;
+    --secondary: 220 15% 94%;
+    --secondary-foreground: 220 30% 15%;
+    --muted: 220 15% 94%;
+    --muted-foreground: 220 15% 45%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 15% 90%;
+    --input: 220 15% 90%;
+    --ring: 38 92% 50%;
+    --radius: 0.85rem;
+    --density-gap: 1.25rem;
+    --density-padding: 1.25rem;
+  }
+
+  /* Amber Gold Theme (Default Luxury) */
+  [data-theme="amber"] {
+    --primary: 38 92% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 38 92% 44%;
+    --accent: 38 92% 50%;
+    --ring: 38 92% 50%;
+  }
+
+  /* Emerald Green Theme (Safari & Ecological) */
+  [data-theme="emerald"] {
+    --primary: 158 64% 42%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 158 64% 35%;
+    --accent: 158 64% 42%;
+    --ring: 158 64% 42%;
+  }
+
+  /* Blue / Cobalt Theme (Executive Tech) */
+  [data-theme="blue"], [data-theme="cobalt"] {
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 221 83% 45%;
+    --accent: 221 83% 53%;
+    --ring: 221 83% 53%;
+  }
+
+  /* Rose Crimson Theme (Sport & Dynamic) */
+  [data-theme="rose"] {
+    --primary: 346 84% 53%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 346 84% 45%;
+    --accent: 346 84% 53%;
+    --ring: 346 84% 53%;
+  }
+
+  /* Corner Radius Modes */
+  [data-radius="sharp"] {
+    --radius: 0rem;
+  }
+  [data-radius="rounded"] {
+    --radius: 0.85rem;
+  }
+  [data-radius="pill"] {
+    --radius: 2rem;
+  }
+
+  /* Layout Density Modes */
+  [data-density="compact"] {
+    --density-gap: 0.75rem;
+    --density-padding: 0.75rem;
+  }
+  [data-density="classic"] {
+    --density-gap: 1.25rem;
+    --density-padding: 1.25rem;
+  }
+  [data-density="spacious"] {
+    --density-gap: 2rem;
+    --density-padding: 2rem;
+  }
+
+  .dark {
+    --background: 224 35% 8%;
+    --foreground: 210 25% 96%;
+    --card: 224 30% 11%;
+    --card-foreground: 210 25% 96%;
+    --popover: 224 30% 11%;
+    --popover-foreground: 210 25% 96%;
+    --secondary: 224 25% 16%;
+    --secondary-foreground: 210 25% 96%;
+    --muted: 224 25% 16%;
+    --muted-foreground: 218 15% 65%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 25% 96%;
+    --border: 224 25% 18%;
+    --input: 224 25% 18%;
+  }
+}
+
+body {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-dropdown {
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Voice Wave Animation */
+@keyframes soundwave {
+  0%, 100% { height: 6px; }
+  50% { height: 28px; }
+}
+
+.animate-soundwave-1 { animation: soundwave 1.2s ease-in-out infinite; }
+.animate-soundwave-2 { animation: soundwave 1.2s ease-in-out infinite 0.2s; }
+.animate-soundwave-3 { animation: soundwave 1.2s ease-in-out infinite 0.4s; }
+.animate-soundwave-4 { animation: soundwave 1.2s ease-in-out infinite 0.1s; }
+.animate-soundwave-5 { animation: soundwave 1.2s ease-in-out infinite 0.3s; }
+
+/* Flow-Motion Highway & Moving Car Animations */
+@keyframes roadMove {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes roadMoveHorizontal {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes carFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(0.4deg); }
+  50% { transform: translateY(1px) rotate(-0.2deg); }
+  75% { transform: translateY(-2px) rotate(0.2deg); }
+}
+
+@keyframes carShadow {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(0.95); opacity: 0.45; }
+}
+
+@keyframes speedStreak {
+  0% { transform: translateX(200%); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { transform: translateX(-200%); opacity: 0; }
+}
+
+.animate-road-move {
+  animation: roadMoveHorizontal 1.8s linear infinite;
+}
+
+.animate-car-float {
+  animation: carFloat 3.5s ease-in-out infinite;
+}
+
+.animate-car-shadow {
+  animation: carShadow 3.5s ease-in-out infinite;
+}
+
+.animate-speed-streak-1 {
+  animation: speedStreak 2s linear infinite;
+}
+
+.animate-speed-streak-2 {
+  animation: speedStreak 1.6s linear infinite 0.5s;
+}
+
+.animate-speed-streak-3 {
+  animation: speedStreak 2.4s linear infinite 1s;
+}
