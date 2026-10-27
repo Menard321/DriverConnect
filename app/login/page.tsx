@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Car,
   Lock,
@@ -12,11 +12,6 @@ import {
   Loader2,
   ArrowRight,
 } from "lucide-react";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 function LoginForm() {
   const router = useRouter();
@@ -30,11 +25,22 @@ function LoginForm() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // If already logged in, navigate straight to the destination
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        window.location.href = redirectTarget;
+      }
+    });
+  }, [redirectTarget]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage(null);
+    setSuccessMessage(null);
 
     try {
       if (mode === "signin") {
@@ -43,6 +49,10 @@ function LoginForm() {
           password,
         });
         if (error) throw error;
+
+        // Perform hard navigation so cookies are immediately attached to Next.js middleware
+        window.location.href = redirectTarget;
+        return;
       } else {
         // Sign Up with profile initialization
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
@@ -58,27 +68,40 @@ function LoginForm() {
         if (signUpError) throw signUpError;
 
         if (authData.user) {
-          // Initialize profile record with 0 balance
-          await supabase.from("profiles").upsert({
-            id: authData.user.id,
-            full_name: fullName,
-            phone: phone,
-            wallet_balance: 0.0,
-            role: "customer",
-          });
+          // Initialize profile record with 0 balance if table exists
+          try {
+            await supabase.from("profiles").upsert({
+              id: authData.user.id,
+              full_name: fullName,
+              phone: phone,
+              wallet_balance: 0.0,
+              role: "customer",
+            });
+          } catch (profileErr) {
+            console.warn("Public profiles table notice:", profileErr);
+          }
         }
-      }
 
-      router.push(redirectTarget);
-      router.refresh();
+        // If email confirmation is required and no session created yet
+        if (!authData.session) {
+          setSuccessMessage(
+            "Account created successfully! If email verification is active on your Supabase project, please check your inbox (menardjoseph774@gmail.com). You can also click 'Sign In' below to login."
+          );
+          setMode("signin");
+          return;
+        }
+
+        router.push(redirectTarget);
+        router.refresh();
+      }
     } catch (err: any) {
       const msg = err.message || "";
       if (msg.includes("Failed to fetch") || msg.includes("fetch")) {
         setErrorMessage(
-          "Database connection error: Could not connect to Supabase PostgreSQL. Please verify your NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local."
+          "Could not reach Supabase servers. Please check your network connection."
         );
       } else {
-        setErrorMessage(msg || "Authentication failed.");
+        setErrorMessage(msg || "Authentication request failed.");
       }
     } finally {
       setLoading(false);
@@ -105,9 +128,19 @@ function LoginForm() {
         <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-300 text-xs font-medium space-y-1">
           <div className="flex items-center gap-2 font-bold text-rose-200">
             <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
-            <span>Connection Error</span>
+            <span>Authentication Alert</span>
           </div>
           <p className="text-[11px] leading-relaxed">{errorMessage}</p>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-medium space-y-1">
+          <div className="flex items-center gap-2 font-bold text-emerald-200">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 text-emerald-400" />
+            <span>Registration Successful</span>
+          </div>
+          <p className="text-[11px] leading-relaxed">{successMessage}</p>
         </div>
       )}
 
