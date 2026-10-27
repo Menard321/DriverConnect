@@ -167,8 +167,10 @@ export default function CustomerDashboardPage() {
   const [refundProcessing, setRefundProcessing] = useState(false);
   const [refundResult, setRefundResult] = useState<any>(null);
 
-  // Multi-Channel Tanzanian Top-Up Checkout State
+  // Multi-Channel Tanzanian & USD Top-Up Checkout State
   const [fundingOpen, setFundingOpen] = useState(false);
+  const [fundingCurrency, setFundingCurrency] = useState<"TZS" | "USD">("TZS");
+  const USD_TO_TZS_RATE = 2650;
   const [fundAmount, setFundAmount] = useState("100000");
   const [fundingRail, setFundingRail] = useState<"mobile_money" | "bank_transfer" | "card">("mobile_money");
   const [mobileOperator, setMobileOperator] = useState<"mpesa" | "tigopesa" | "airtel" | "halopesa">("mpesa");
@@ -185,11 +187,27 @@ export default function CustomerDashboardPage() {
 
   const openFundingModal = () => {
     setFundingStep("input");
+    setFundingCurrency("TZS");
     setFundAmount("100000");
-    setBankRefCode("DC-" + Math.floor(100000 + Math.random() * 900000));
+    setBankRefCode("DC-TZS-" + Math.floor(100000 + Math.random() * 900000));
     setMobilePhone(profile?.phone || "+255");
     setFundingSuccessData(null);
     setFundingOpen(true);
+  };
+
+  const handleFundingCurrencyChange = (newCurr: "TZS" | "USD") => {
+    setFundingCurrency(newCurr);
+    if (newCurr === "USD") {
+      setFundAmount("100");
+      setBankRefCode("DC-USD-" + Math.floor(100000 + Math.random() * 900000));
+      // Strictly enforce bank wire for USD (Mobile money only works with TZS)
+      if (fundingRail === "mobile_money") {
+        setFundingRail("bank_transfer");
+      }
+    } else {
+      setFundAmount("100000");
+      setBankRefCode("DC-TZS-" + Math.floor(100000 + Math.random() * 900000));
+    }
   };
 
   const handleCopy = (text: string, key: string) => {
@@ -383,7 +401,9 @@ export default function CustomerDashboardPage() {
       await new Promise((r) => setTimeout(r, 1800));
     }
 
-    const topUpVal = Number(fundAmount);
+    const isUSD = fundingCurrency === "USD";
+    const topUpUSD = isUSD ? Number(fundAmount) : 0;
+    const topUpVal = isUSD ? Math.round(Number(fundAmount) * USD_TO_TZS_RATE) : Number(fundAmount);
     const newBal = (profile?.wallet_balance || 0) + topUpVal;
 
     let railDescription = "";
@@ -406,10 +426,14 @@ export default function CustomerDashboardPage() {
         tips: "TIPS Interbank Settlement",
       };
       providerName = bankNames[selectedBank];
-      railDescription = `Bank Wire (${providerName} - Ref: ${bankRefCode})`;
+      railDescription = isUSD
+        ? `USD Bank Wire ($${topUpUSD.toLocaleString()} @ 2,650 TZS - ${providerName} - Ref: ${bankRefCode})`
+        : `Bank Wire (${providerName} - Ref: ${bankRefCode})`;
     } else {
       providerName = "Visa / Mastercard Card";
-      railDescription = `Card Checkout (${providerName} ending in ${cardData.number.slice(-4) || "8821"})`;
+      railDescription = isUSD
+        ? `USD Card Checkout ($${topUpUSD.toLocaleString()} @ 2,650 TZS - ${providerName})`
+        : `Card Checkout (${providerName} ending in ${cardData.number.slice(-4) || "8821"})`;
     }
 
     // 1. Persist to Supabase Auth user metadata so it is stored permanently
@@ -465,10 +489,13 @@ export default function CustomerDashboardPage() {
     ]);
 
     setFundingSuccessData({
-      amount: topUpVal,
+      amount: isUSD
+        ? `$${topUpUSD.toLocaleString()} USD (Credited TZS ${topUpVal.toLocaleString()})`
+        : `TZS ${topUpVal.toLocaleString()}`,
       newBalance: newBal,
       provider: providerName,
       rail: fundingRail,
+      currency: fundingCurrency,
       reference: bankRefCode || "TX-" + Math.floor(100000 + Math.random() * 900000),
       timestamp: new Date().toLocaleTimeString(),
     });
@@ -966,7 +993,9 @@ export default function CustomerDashboardPage() {
                   <div className="flex justify-between items-center pb-2 border-b border-slate-800">
                     <span className="text-slate-400 font-medium">Credited Amount</span>
                     <span className="text-emerald-400 font-black font-mono text-sm">
-                      +TZS {fundingSuccessData?.amount?.toLocaleString()}
+                      +{typeof fundingSuccessData?.amount === "string"
+                        ? fundingSuccessData?.amount
+                        : `TZS ${fundingSuccessData?.amount?.toLocaleString()}`}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -1005,30 +1034,80 @@ export default function CustomerDashboardPage() {
             {fundingStep === "input" && (
               <form onSubmit={handleWalletFunding} className="space-y-5 text-xs">
                 
-                {/* 1. AMOUNT SELECTION & PRESETS */}
+                {/* 1. CURRENCY SELECTOR */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                      1. Select Top-Up Currency
+                    </label>
+                    <span className="text-[10px] text-amber-400/90 font-mono">
+                      1 USD ≈ {USD_TO_TZS_RATE.toLocaleString()} TZS
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-xl border border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => handleFundingCurrencyChange("TZS")}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                        fundingCurrency === "TZS"
+                          ? "bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20"
+                          : "text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      <span className="text-base leading-none">🇹🇿</span>
+                      <span>TZS (Tanzanian Shilling)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFundingCurrencyChange("USD")}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                        fundingCurrency === "USD"
+                          ? "bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20"
+                          : "text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      <span className="text-base leading-none">🇺🇸</span>
+                      <span>USD (US Dollar Wire)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. AMOUNT SELECTION & PRESETS */}
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                    1. Top-Up Amount (TZS)
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                      2. Top-Up Amount ({fundingCurrency})
+                    </label>
+                    {fundingCurrency === "USD" && (
+                      <span className="text-[10px] text-slate-400">
+                        Min: $20 USD
+                      </span>
+                    )}
+                  </div>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-500 font-mono text-xs">
-                      TZS
+                      {fundingCurrency === "USD" ? "USD $" : "TZS"}
                     </span>
                     <input
                       type="number"
                       required
-                      min="10000"
-                      step="5000"
+                      min={fundingCurrency === "USD" ? "20" : "10000"}
+                      step={fundingCurrency === "USD" ? "10" : "5000"}
                       value={fundAmount}
                       onChange={(e) => setFundAmount(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-amber-400 font-mono font-black text-base focus:outline-none focus:border-amber-400 transition"
-                      placeholder="100000"
+                      className={`w-full bg-slate-950 border border-slate-800 rounded-xl pr-4 py-3 text-amber-400 font-mono font-black text-base focus:outline-none focus:border-amber-400 transition ${
+                        fundingCurrency === "USD" ? "pl-20" : "pl-12"
+                      }`}
+                      placeholder={fundingCurrency === "USD" ? "100" : "100000"}
                     />
                   </div>
 
                   {/* Preset Quick Chips */}
                   <div className="flex flex-wrap gap-2 pt-1">
-                    {["50000", "100000", "250000", "500000", "1000000"].map((preset) => (
+                    {(fundingCurrency === "USD"
+                      ? ["50", "100", "250", "500", "1000"]
+                      : ["50000", "100000", "250000", "500000", "1000000"]
+                    ).map((preset) => (
                       <button
                         type="button"
                         key={preset}
@@ -1039,32 +1118,28 @@ export default function CustomerDashboardPage() {
                             : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700"
                         }`}
                       >
-                        TZS {Number(preset).toLocaleString()}
+                        {fundingCurrency === "USD" ? `$${preset} USD` : `TZS ${Number(preset).toLocaleString()}`}
                       </button>
                     ))}
                   </div>
+
+                  {fundingCurrency === "USD" && (
+                    <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-300 flex items-center justify-between">
+                      <span className="text-slate-400">Wallet Credit Equivalent:</span>
+                      <span className="font-mono font-bold text-emerald-400">
+                        ≈ TZS {(Math.round(Number(fundAmount || 0) * USD_TO_TZS_RATE)).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* 2. PAYMENT RAIL SELECTOR TABS */}
+                {/* 3. PAYMENT RAIL SELECTOR TABS */}
                 <div className="space-y-2">
                   <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                    2. Select Payment Method
+                    3. Select Payment Rail
                   </label>
                   <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setFundingRail("mobile_money")}
-                      className={`p-2.5 rounded-xl border text-center transition flex flex-col items-center gap-1 cursor-pointer ${
-                        fundingRail === "mobile_money"
-                          ? "border-amber-400 bg-amber-400/10 text-white font-bold ring-1 ring-amber-400"
-                          : "border-slate-800 bg-slate-950/60 text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      <Smartphone className={`w-4 h-4 ${fundingRail === "mobile_money" ? "text-amber-400" : ""}`} />
-                      <span className="text-[11px] font-bold leading-tight">Mobile Money</span>
-                      <span className="text-[9px] text-slate-500 font-normal">M-Pesa, Tigo, Airtel</span>
-                    </button>
-
+                    {/* Bank Wire */}
                     <button
                       type="button"
                       onClick={() => setFundingRail("bank_transfer")}
@@ -1075,10 +1150,37 @@ export default function CustomerDashboardPage() {
                       }`}
                     >
                       <Building2 className={`w-4 h-4 ${fundingRail === "bank_transfer" ? "text-amber-400" : ""}`} />
-                      <span className="text-[11px] font-bold leading-tight">Bank & TIPS</span>
-                      <span className="text-[9px] text-slate-500 font-normal">CRDB, NMB, Stanbic</span>
+                      <span className="text-[11px] font-bold leading-tight">Bank Wire</span>
+                      <span className="text-[9px] text-slate-500 font-normal">
+                        {fundingCurrency === "USD" ? "USD Nostro" : "CRDB, NMB, TIPS"}
+                      </span>
                     </button>
 
+                    {/* Mobile Money (DISABLED FOR USD) */}
+                    <button
+                      type="button"
+                      disabled={fundingCurrency === "USD"}
+                      onClick={() => fundingCurrency === "TZS" && setFundingRail("mobile_money")}
+                      className={`p-2.5 rounded-xl border text-center transition flex flex-col items-center gap-1 relative ${
+                        fundingCurrency === "USD"
+                          ? "border-slate-800/40 bg-slate-950/30 text-slate-600 cursor-not-allowed opacity-50"
+                          : fundingRail === "mobile_money"
+                          ? "border-amber-400 bg-amber-400/10 text-white font-bold ring-1 ring-amber-400 cursor-pointer"
+                          : "border-slate-800 bg-slate-950/60 text-slate-400 hover:text-white cursor-pointer"
+                      }`}
+                    >
+                      <Smartphone className={`w-4 h-4 ${fundingRail === "mobile_money" ? "text-amber-400" : ""}`} />
+                      <span className="text-[11px] font-bold leading-tight">Mobile Money</span>
+                      {fundingCurrency === "USD" ? (
+                        <span className="text-[8px] bg-rose-500/20 text-rose-300 px-1 py-0.2 rounded font-semibold">
+                          TZS Only
+                        </span>
+                      ) : (
+                        <span className="text-[9px] text-slate-500 font-normal">M-Pesa, Tigo, Airtel</span>
+                      )}
+                    </button>
+
+                    {/* Card */}
                     <button
                       type="button"
                       onClick={() => setFundingRail("card")}
@@ -1090,15 +1192,25 @@ export default function CustomerDashboardPage() {
                     >
                       <CreditCard className={`w-4 h-4 ${fundingRail === "card" ? "text-amber-400" : ""}`} />
                       <span className="text-[11px] font-bold leading-tight">Card (Visa/MC)</span>
-                      <span className="text-[9px] text-slate-500 font-normal">Instant 3DS</span>
+                      <span className="text-[9px] text-slate-500 font-normal">3D-Secure</span>
                     </button>
                   </div>
+
+                  {fundingCurrency === "USD" && (
+                    <div className="p-2.5 rounded-xl bg-amber-950/30 border border-amber-800/50 text-[11px] text-amber-300 flex items-start gap-2">
+                      <Building2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <p className="leading-relaxed">
+                        <strong>USD Payment Policy:</strong> Mobile network operators (Vodacom, Tigo, Airtel) do not settle in USD.
+                        All USD top-ups must be initiated through <strong>Corporate Bank Account / Wire Transfer</strong>.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                {/* 3. RAIL SPECIFIC DETAILS */}
+                {/* 4. RAIL SPECIFIC DETAILS */}
 
-                {/* RAIL A: ALL TANZANIAN MOBILE MONEY NETWORKS */}
-                {fundingRail === "mobile_money" && (
+                {/* RAIL A: ALL TANZANIAN MOBILE MONEY NETWORKS (TZS ONLY) */}
+                {fundingRail === "mobile_money" && fundingCurrency === "TZS" && (
                   <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-4">
                     
                     {/* Operator Grid */}
@@ -1225,19 +1337,21 @@ export default function CustomerDashboardPage() {
                   </div>
                 )}
 
-                {/* RAIL B: TANZANIAN BANK TRANSFERS & TIPS */}
+                {/* RAIL B: BANK TRANSFERS (USD & TZS) */}
                 {fundingRail === "bank_transfer" && (
                   <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-4">
                     <div>
                       <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block mb-2">
-                        Select Destination Bank / TIPS:
+                        Select Destination Bank {fundingCurrency === "USD" ? "(USD Nostro Accounts)" : "(TZS / TIPS)"}:
                       </span>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
-                          { id: "crdb", name: "CRDB Bank", code: "0150 2849 10400", swift: "CORUTZTZ" },
-                          { id: "nmb", name: "NMB Bank", code: "2011 0048 29100", swift: "NMBLTZTZ" },
-                          { id: "stanbic", name: "Stanbic", code: "9120 0019 48200", swift: "SBICNEAA" },
-                          { id: "tips", name: "TIPS (All)", code: "DC-TIPS-TZ", swift: "TIPS-BOT" },
+                          { id: "crdb", name: "CRDB Bank", swift: "CORUTZTZ" },
+                          { id: "nmb", name: "NMB Bank", swift: "NMBLTZTZ" },
+                          { id: "stanbic", name: "Stanbic", swift: "SBICNEAA" },
+                          ...(fundingCurrency === "TZS"
+                            ? [{ id: "tips", name: "TIPS (All)", swift: "TIPS-BOT" }]
+                            : []),
                         ].map((b) => (
                           <div
                             key={b.id}
@@ -1250,6 +1364,7 @@ export default function CustomerDashboardPage() {
                           >
                             <Building2 className={`w-4 h-4 mx-auto ${selectedBank === b.id ? "text-amber-400" : "text-slate-500"}`} />
                             <span className="text-[11px] font-bold text-white block">{b.name}</span>
+                            <span className="text-[9px] font-mono text-slate-400">{b.swift}</span>
                           </div>
                         ))}
                       </div>
@@ -1258,14 +1373,22 @@ export default function CustomerDashboardPage() {
                     {/* Bank Wire Details Box */}
                     <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl space-y-2 text-[11px]">
                       <div className="flex justify-between items-center pb-1.5 border-b border-slate-800">
-                        <span className="text-slate-400">Account Name</span>
+                        <span className="text-slate-400">Beneficiary Name</span>
                         <span className="font-bold text-white">DriverConnect Automotive Ltd</span>
                       </div>
                       <div className="flex justify-between items-center pb-1.5 border-b border-slate-800">
-                        <span className="text-slate-400">Account Number / TIPS</span>
+                        <span className="text-slate-400">
+                          {fundingCurrency === "USD" ? "Corporate USD Nostro Account" : "Account Number / TIPS"}
+                        </span>
                         <div className="flex items-center gap-1.5 font-mono font-bold text-amber-400">
                           <span>
-                            {selectedBank === "crdb"
+                            {fundingCurrency === "USD"
+                              ? selectedBank === "crdb"
+                                ? "0250 2849 10401 (USD)"
+                                : selectedBank === "nmb"
+                                ? "2011 0048 29105 (USD)"
+                                : "9120 0019 48205 (USD)"
+                              : selectedBank === "crdb"
                               ? "0150 2849 10400"
                               : selectedBank === "nmb"
                               ? "2011 0048 29100"
@@ -1277,12 +1400,18 @@ export default function CustomerDashboardPage() {
                             type="button"
                             onClick={() =>
                               handleCopy(
-                                selectedBank === "crdb"
-                                  ? "0150 2849 10400"
+                                fundingCurrency === "USD"
+                                  ? selectedBank === "crdb"
+                                    ? "0250284910401"
+                                    : selectedBank === "nmb"
+                                    ? "2011004829105"
+                                    : "9120001948205"
+                                  : selectedBank === "crdb"
+                                  ? "0150284910400"
                                   : selectedBank === "nmb"
-                                  ? "2011 0048 29100"
+                                  ? "2011004829100"
                                   : selectedBank === "stanbic"
-                                  ? "9120 0019 48200"
+                                  ? "9120001948200"
                                   : "DC-TIPS-TZ",
                                 "bank_acc"
                               )
@@ -1293,8 +1422,16 @@ export default function CustomerDashboardPage() {
                           </button>
                         </div>
                       </div>
+
                       <div className="flex justify-between items-center pb-1.5 border-b border-slate-800">
-                        <span className="text-slate-400">Payment Reference (Memo)</span>
+                        <span className="text-slate-400">Bank SWIFT / BIC</span>
+                        <span className="font-mono text-slate-200 font-bold">
+                          {selectedBank === "crdb" ? "CORUTZTZ" : selectedBank === "nmb" ? "NMBLTZTZ" : "SBICNEAA"}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center pb-1.5 border-b border-slate-800">
+                        <span className="text-slate-400">Wire Memo / Reference</span>
                         <div className="flex items-center gap-1.5 font-mono font-black text-amber-300">
                           <span>{bankRefCode}</span>
                           <button
@@ -1308,7 +1445,7 @@ export default function CustomerDashboardPage() {
                       </div>
                       <p className="text-[10px] text-amber-400/90 leading-relaxed pt-1">
                         &bull; Crucial: Please enter <strong className="font-mono text-white">{bankRefCode}</strong> in your
-                        bank transfer narration or memo so our system automatically links the deposit to your wallet.
+                        wire transfer narration or memo so our system automatically links the deposit to your wallet.
                       </p>
                     </div>
 
@@ -1320,7 +1457,7 @@ export default function CustomerDashboardPage() {
                         type="text"
                         value={bankSlipRef}
                         onChange={(e) => setBankSlipRef(e.target.value)}
-                        placeholder="e.g. FT262919401"
+                        placeholder="e.g. FT262919401 / Swift ACK"
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
                       />
                     </div>
@@ -1332,7 +1469,7 @@ export default function CustomerDashboardPage() {
                   <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
                     <div>
                       <label className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider mb-1">
-                        Card Number
+                        Card Number (Settled in {fundingCurrency})
                       </label>
                       <input
                         type="text"
@@ -1406,13 +1543,17 @@ export default function CustomerDashboardPage() {
                   ) : (
                     <>
                       <span>
-                        {fundingRail === "mobile_money"
+                        {fundingCurrency === "USD"
+                          ? fundingRail === "bank_transfer"
+                            ? `Confirm USD $${Number(fundAmount || 0).toLocaleString()} Wire & Credit TZS ${(Math.round(Number(fundAmount || 0) * USD_TO_TZS_RATE)).toLocaleString()}`
+                            : `Pay USD $${Number(fundAmount || 0).toLocaleString()} via Card`
+                          : fundingRail === "mobile_money"
                           ? mobileMode === "ussd_push"
-                            ? `Dispatch USSD Prompt & Pay TZS ${Number(fundAmount).toLocaleString()}`
-                            : `I Paid via Lipa Namba & Reconcile TZS ${Number(fundAmount).toLocaleString()}`
+                            ? `Dispatch USSD Prompt & Pay TZS ${Number(fundAmount || 0).toLocaleString()}`
+                            : `I Paid via Lipa Namba & Reconcile TZS ${Number(fundAmount || 0).toLocaleString()}`
                           : fundingRail === "bank_transfer"
-                          ? `Confirm Transfer & Reconcile TZS ${Number(fundAmount).toLocaleString()}`
-                          : `Pay TZS ${Number(fundAmount).toLocaleString()} via Card`}
+                          ? `Confirm Transfer & Reconcile TZS ${Number(fundAmount || 0).toLocaleString()}`
+                          : `Pay TZS ${Number(fundAmount || 0).toLocaleString()} via Card`}
                       </span>
                       <ArrowRight className="w-4 h-4" />
                     </>

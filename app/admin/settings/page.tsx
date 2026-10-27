@@ -18,7 +18,7 @@ export default function AdminSettingsPage() {
   // Ava Voice Concierge Persona & Prompt settings
   const [voicePersona, setVoicePersona] = useState('alloy');
   const [systemPrompt, setSystemPrompt] = useState(
-    'You are "Ava", the elite autonomous voice concierge for DriverConnect in Tanzania (Dar es Salaam & Arusha). Always quote strictly in Tanzanian Shillings (TZS).'
+    'You are "Ava", the elite autonomous voice concierge for DriverConnect in Tanzania (Dar es Salaam & Arusha). Quote in Tanzanian Shillings (TZS) and USD ($1 USD ≈ 2,650 TZS). USD payments are settled via Bank Wire Transfer.'
   );
   const [savedSuccess, setSavedSuccess] = useState(false);
 

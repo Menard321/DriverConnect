@@ -85,7 +85,7 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between text-xs text-muted-foreground gap-4">
-          <p>© {new Date().getFullYear()} DriverConnect Tanzania. All rights reserved. Prices strictly in TZS.</p>
+          <p>© {new Date().getFullYear()} DriverConnect Tanzania. All rights reserved. Multi-currency settlement in TZS & USD.</p>
           <div className="flex gap-6">
             <Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link>
             <Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
