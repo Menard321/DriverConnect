@@ -21,6 +21,8 @@ import { Vehicle } from '@/lib/types';
 import { INITIAL_VEHICLES } from '@/lib/mockData';
 import { formatTZS, formatTZSCompact } from '@/lib/formatters';
 import { FlowMotionHero } from '@/components/home/FlowMotionHero';
+import { FleetSearchBar } from '@/components/home/FleetSearchBar';
+import { HowItWorksSection } from '@/components/home/HowItWorksSection';
 
 export default function HomePage() {
   const [activeVertical, setActiveVertical] = useState<'rent' | 'buy' | 'repair'>('rent');
@@ -63,6 +65,9 @@ export default function HomePage() {
         onSelectVertical={(vert) => setActiveVertical(vert)}
       />
 
+      {/* 1. Instant Fleet Search & Filter Bar */}
+      <FleetSearchBar />
+
       {/* Trust Badges Bar */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-3xl bg-secondary/40 border border-border/80">
@@ -104,6 +109,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 2. "How It Works" 3-Step Interactive Walkthrough */}
+      <HowItWorksSection />
 
       {/* Main Inventory Catalog */}
       <section id="inventory-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
