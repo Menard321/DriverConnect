@@ -200,14 +200,17 @@ export function HeaderMegaMenu() {
               <div className="w-24 h-9 bg-slate-900 animate-pulse rounded-lg" />
             ) : user ? (
               <div className="flex items-center gap-2">
-                <Link className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl border border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/20 transition text-amber-400" href="/admin" title="Admin Operations Console">
-                  <ShieldCheck className="w-3.5 h-3.5"/>
-                  <span className="hidden sm:inline">Admin</span>
-                </Link>
-                <Link className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 transition text-white" href="/account/dashboard">
-                  <User className="w-3.5 h-3.5 text-amber-400"/>
-                  <span className="hidden sm:inline">My Account</span>
-                </Link>
+                {user?.user_metadata?.role === "admin" ? (
+                  <Link className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/20 transition text-amber-400" href="/admin" title="Administrator Control Console">
+                    <ShieldCheck className="w-3.5 h-3.5"/>
+                    <span>Admin Console</span>
+                  </Link>
+                ) : (
+                  <Link className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 transition text-white" href="/account/dashboard">
+                    <User className="w-3.5 h-3.5 text-amber-400"/>
+                    <span className="hidden sm:inline">My Account</span>
+                  </Link>
+                )}
                 <button
                   onClick={handleSignOut}
                   title="Sign Out"

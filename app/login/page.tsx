@@ -27,14 +27,17 @@ function LoginForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // If already logged in, navigate straight to the destination
+  // If already logged in, navigate straight to role-appropriate destination
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
-        window.location.href = redirectTarget;
+        const role = user.user_metadata?.role;
+        const explicitRedirect = searchParams.get("redirect");
+        const destination = explicitRedirect || (role === "admin" ? "/admin" : "/account/dashboard");
+        window.location.href = destination;
       }
     });
-  }, [redirectTarget]);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,14 +47,19 @@ function LoginForm() {
 
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data: signInData, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
 
+        // Route dynamically by role
+        const role = signInData?.user?.user_metadata?.role;
+        const explicitRedirect = searchParams.get("redirect");
+        const destination = explicitRedirect || (role === "admin" ? "/admin" : "/account/dashboard");
+
         // Perform hard navigation so cookies are immediately attached to Next.js middleware
-        window.location.href = redirectTarget;
+        window.location.href = destination;
         return;
       } else {
         // Sign Up with profile initialization

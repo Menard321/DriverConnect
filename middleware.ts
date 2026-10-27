@@ -55,6 +55,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  // Strict Role Guard: Only administrators can access /admin routes
+  if (user && request.nextUrl.pathname.startsWith("/admin")) {
+    const userRole = user.user_metadata?.role || "customer";
+    if (userRole !== "admin") {
+      // Forbidden: Regular customer attempting to access admin console is redirected to customer dashboard
+      const customerUrl = request.nextUrl.clone();
+      customerUrl.pathname = "/account/dashboard";
+      customerUrl.search = "";
+      return NextResponse.redirect(customerUrl);
+    }
+  }
+
   return response;
 }
 
