@@ -222,13 +222,31 @@ export default function CustomerDashboardPage() {
         return;
       }
 
-      // Fetch Profile
-      const { data: pData } = await supabase
-        .from("profiles")
-        .select("id, full_name, phone, wallet_balance")
-        .eq("id", user.id)
-        .single();
-      if (pData) setProfile(pData);
+      // Fetch Profile from PostgreSQL table
+      let currentProfile: Profile | null = null;
+      try {
+        const { data: pData } = await supabase
+          .from("profiles")
+          .select("id, full_name, phone, wallet_balance")
+          .eq("id", user.id)
+          .single();
+        if (pData) currentProfile = pData;
+      } catch (pErr) {
+        console.warn("[Profile table query notice]:", pErr);
+      }
+
+      // If no row in profiles table yet, initialize from user auth metadata
+      if (!currentProfile) {
+        const meta = user.user_metadata || {};
+        const metaBalance = typeof meta.wallet_balance === "number" ? meta.wallet_balance : 0;
+        currentProfile = {
+          id: user.id,
+          full_name: meta.full_name || user.email?.split("@")[0] || "Valued Customer",
+          phone: meta.phone || null,
+          wallet_balance: metaBalance,
+        };
+      }
+      setProfile(currentProfile);
 
       // Fetch Bookings with Vehicle relations
       const { data: bData } = await supabase
@@ -394,11 +412,30 @@ export default function CustomerDashboardPage() {
       railDescription = `Card Checkout (${providerName} ending in ${cardData.number.slice(-4) || "8821"})`;
     }
 
-    if (profile?.id && profile.id !== "00000000-0000-0000-0000-000000000000") {
+    // 1. Persist to Supabase Auth user metadata so it is stored permanently
+    try {
+      await supabase.auth.updateUser({
+        data: {
+          wallet_balance: newBal,
+          full_name: profile?.full_name || "Valued Customer",
+          phone: mobilePhone || profile?.phone,
+        },
+      });
+    } catch (authErr) {
+      console.warn("[Auth metadata update note]:", authErr);
+    }
+
+    // 2. Also persist to PostgreSQL profiles table and ledger if tables exist
+    const targetUserId = profile?.id && profile.id !== "00000000-0000-0000-0000-000000000000" ? profile.id : null;
+    if (targetUserId) {
       try {
-        await supabase.from("profiles").update({ wallet_balance: newBal }).eq("id", profile.id);
+        await supabase.from("profiles").upsert({
+          id: targetUserId,
+          wallet_balance: newBal,
+          full_name: profile?.full_name,
+        });
         await supabase.from("wallet_ledgers").insert({
-          profile_id: profile.id,
+          profile_id: targetUserId,
           amount: topUpVal,
           running_balance: newBal,
           reason: `Wallet top-up via ${railDescription}`,
@@ -408,10 +445,13 @@ export default function CustomerDashboardPage() {
       }
     }
 
-    // Update local state
-    if (profile) {
-      setProfile({ ...profile, wallet_balance: newBal });
-    }
+    // 3. Immediately update local component state
+    setProfile((prev) => ({
+      id: prev?.id || targetUserId || "user",
+      full_name: prev?.full_name || "Valued Customer",
+      phone: prev?.phone || null,
+      wallet_balance: newBal,
+    }));
 
     setLedgers((prev) => [
       {

@@ -46,7 +46,7 @@ export function HeaderMegaMenu() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           setUser(session.user);
-          await fetchWallet(session.user.id);
+          await fetchWallet(session.user.id, session.user);
         } else {
           setUser(null);
           setWalletBalance(null);
@@ -60,16 +60,23 @@ export function HeaderMegaMenu() {
       }
     }
 
-    async function fetchWallet(userId: string) {
+    async function fetchWallet(userId: string, currentUser?: any) {
       try {
         const { data } = await supabase
           .from("profiles")
           .select("wallet_balance")
           .eq("id", userId)
           .single();
-        if (data) setWalletBalance(data.wallet_balance);
+        if (data && typeof data.wallet_balance === "number") {
+          setWalletBalance(data.wallet_balance);
+          return;
+        }
       } catch (err) {
         console.warn("[Header fetch wallet note]:", err);
+      }
+
+      if (currentUser?.user_metadata?.wallet_balance !== undefined) {
+        setWalletBalance(Number(currentUser.user_metadata.wallet_balance));
       }
     }
 
@@ -79,7 +86,7 @@ export function HeaderMegaMenu() {
       async (event, session) => {
         if (session?.user) {
           setUser(session.user);
-          await fetchWallet(session.user.id);
+          await fetchWallet(session.user.id, session.user);
         } else {
           setUser(null);
           setWalletBalance(null);
