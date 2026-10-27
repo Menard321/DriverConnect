@@ -523,8 +523,8 @@ INSERT INTO public.vehicles (
 (
     'Toyota Land Cruiser Prado TX-L', 'Toyota', 'Prado TX-L', 2021, 'SUV', 'automatic', 7, 5, 'Diesel',
     42000, 'T 782 EBC', 350000.00, 2100000.00, 145000000.00, true, true, true, 'available',
-    'https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=1200&q=80',
-    ARRAY['https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=1200&q=80'],
+    '/images/cars/toyota-prado.webp',
+    ARRAY['/images/cars/toyota-prado.webp'],
     ARRAY['4WD / 4x4', 'Leather Seats', 'Sunroof', 'Sunshade', 'Reverse Camera', 'Coolbox']
 ),
 (

@@ -30,7 +30,7 @@ export default function ListCarPage() {
   const [isForRent, setIsForRent] = useState(true);
   const [isForSale, setIsForSale] = useState(false);
   const [featuresInput, setFeaturesInput] = useState('Reverse Camera, 4WD, Bluetooth, Air Conditioning');
-  const [imageUrl, setImageUrl] = useState('https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=1200&q=80');
+  const [imageUrl, setImageUrl] = useState('/images/cars/toyota-prado.webp');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedVehicle, setSubmittedVehicle] = useState<any | null>(null);

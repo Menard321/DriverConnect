@@ -93,7 +93,7 @@ const DEMO_BOOKINGS: Booking[] = [
       id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
       title: "Toyota Land Cruiser Prado TX-L",
       license_plate: "T 782 EBC",
-      cover_image: "https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=1200&q=80",
+      cover_image: "/images/cars/toyota-prado.webp",
     },
     drivers: {
       license_number: "TZ-DL-49201",

@@ -21,10 +21,10 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     is_for_sale: true,
     is_approved: true,
     status: 'available',
-    cover_image: 'https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=1200&q=80',
+    cover_image: '/images/cars/toyota-prado.webp',
     gallery_images: [
-      'https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1200&q=80',
+      '/images/cars/toyota-prado.webp',
+      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80',
     ],
     features: ['4WD / 4x4', 'Leather Seats', 'Sunroof', 'Sunshade', 'Reverse Camera', 'Coolbox'],
     created_at: new Date().toISOString(),
