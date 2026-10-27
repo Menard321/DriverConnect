@@ -45,11 +45,6 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "var(--app-primary, hsl(var(--ring)))",
-        "primary-accent": "#e0533c",
-        "primary-accent-hover": "#d04631",
-        "card-warm-bg": "#fbf5f2",
-        "card-warm-border": "#f0ded8",
-        "neutral-page-bg": "#f8f9fa",
       },
       borderRadius: {
         lg: "var(--app-radius, var(--radius))",

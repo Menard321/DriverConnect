@@ -56,8 +56,8 @@ export function FloatingCardsTicker() {
   return (
     <div className="relative w-full overflow-hidden py-3 select-none">
       {/* Edge gradient masks for seamless fade out on the sides */}
-      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#f8f9fa] to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#f8f9fa] to-transparent z-10 pointer-events-none" />
+      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-slate-950 to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-slate-950 to-transparent z-10 pointer-events-none" />
 
       {/* Continuously translating conveyor belt */}
       <motion.div
@@ -66,7 +66,7 @@ export function FloatingCardsTicker() {
         transition={{
           repeat: Infinity,
           ease: "linear",
-          duration: 22,
+          duration: 22, // adjust speed as needed
         }}
       >
         {duplicatedCards.map((card, idx) => {
@@ -74,21 +74,21 @@ export function FloatingCardsTicker() {
           return (
             <div
               key={idx}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white shadow-md border border-gray-200/80 transition-transform hover:scale-105 cursor-pointer flex-shrink-0"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white shadow-xl border border-slate-200/80 transition-transform hover:scale-105 cursor-pointer flex-shrink-0"
             >
-              {/* Rounded Icon Capsule */}
+              {/* Rounded Icon Capsule (matches your second image) */}
               <div
-                className={`w-9 h-9 rounded-xl ${card.iconBg} ${card.iconColor} flex items-center justify-center shadow-sm flex-shrink-0`}
+                className={`w-9 h-9 rounded-xl ${card.iconBg} ${card.iconColor} flex items-center justify-center shadow-md flex-shrink-0`}
               >
                 <Icon className="w-5 h-5" />
               </div>
 
               {/* Text Meta */}
               <div className="flex flex-col text-left">
-                <span className="text-sm font-black text-gray-900 leading-tight">
+                <span className="text-sm font-black text-slate-950 leading-tight">
                   {card.label}
                 </span>
-                <span className="text-[11px] font-semibold text-gray-500 leading-tight">
+                <span className="text-[11px] font-semibold text-slate-500 leading-tight">
                   {card.sublabel}
                 </span>
               </div>
