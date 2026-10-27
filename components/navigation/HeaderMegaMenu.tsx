@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wrench,
@@ -17,7 +17,6 @@ import {
   Sparkles,
   ArrowRight,
   Wallet,
-  Mic,
   FileCheck2,
   MapPin,
   LogIn,
@@ -31,6 +30,8 @@ type ActiveMenu = "services" | "rentals" | "sales" | "more" | null;
 
 export function HeaderMegaMenu() {
   const router = useRouter();
+  const pathname = usePathname();
+  const isAccountRoute = pathname?.startsWith("/account");
   const [activeMenu, setActiveMenu] = useState<ActiveMenu>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -183,8 +184,8 @@ export function HeaderMegaMenu() {
           {/* User Status & Action Controls */}
           <div className="flex items-center gap-3">
             
-            {/* 1. Wallet Balance: ONLY rendered for authenticated users */}
-            {!authLoading && user && walletBalance !== null && (
+            {/* 1. Wallet Balance: Rendered on all pages EXCEPT /account/* where dashboard capsule is already present */}
+            {!authLoading && user && walletBalance !== null && !isAccountRoute && (
               <Link className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-semibold hover:border-amber-400/50 transition group shadow-inner" href="/account/dashboard?tab=wallet">
                 <Wallet className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform"/>
                 <span className="text-slate-400">Wallet:</span>
@@ -193,18 +194,6 @@ export function HeaderMegaMenu() {
                 </span>
               </Link>
             )}
-
-            {/* 2. Voice Concierge Trigger: Always available */}
-            <button
-              onClick={() => {
-                const event = new CustomEvent("trigger-voice-concierge");
-                window.dispatchEvent(event);
-              }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-xs uppercase tracking-wider hover:from-amber-400 hover:to-amber-500 shadow-md shadow-amber-500/10 transition-all hover:scale-105 cursor-pointer"
-            >
-              <Mic className="w-4 h-4 animate-pulse text-slate-950"/>
-              <span>Talk to Ava</span>
-            </button>
 
             {/* 3. Conditional Auth Gateway */}
             {authLoading ? (
